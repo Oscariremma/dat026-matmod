@@ -2,6 +2,7 @@ mod components;
 mod physics;
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy_prototype_debug_lines::*;
 use components::*;
 use physics::*;
 
@@ -19,23 +20,42 @@ const BALLS_Z_INDEX: f32 = 1.0;
 fn get_initial_balls() -> Vec<StartingParameter> {
     vec![
         StartingParameter {
-            velocity: Vec2::new(40.0, 40.0),
-            position: Vec2::new(20.0, -100.0),
+            velocity: Vec2::new(0.0, -200.0),
+            position: Vec2::new(50.0, 100.0),
             color: Color::DARK_GREEN,
             size: 100.0,
         },
         StartingParameter {
-            velocity: Vec2::new(0.0, 8.0),
-            position: Vec2::new(0.0, 0.0),
+            velocity: Vec2::new(-500.0, 100.0),
+            position: Vec2::new(-50.0, -200.0),
             color: Color::TURQUOISE,
-            size: 70.0,
+            size: 100.0,
+        },
+        StartingParameter {
+            velocity: Vec2::new(500.0, 100.0),
+            position: Vec2::new(-300.0, 300.0),
+            color: Color::BLUE,
+            size: 100.0,
+        },
+        StartingParameter {
+            velocity: Vec2::new(-500.0, 600.0),
+            position: Vec2::new(-90.0, -100.0),
+            color: Color::BLACK,
+            size: 100.0,
         },
     ]
 }
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Balls".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }))
+        .add_plugins(DebugLinesPlugin::default())
         .insert_resource(ClearColor(BACKGROUND_COLOR))
         // Configure how frequently our gameplay systems are run
         .insert_resource(FixedTime::new_from_secs(1.0 / 60.0))
@@ -44,8 +64,9 @@ fn main() {
         .add_systems(
             FixedUpdate,
             (
-                check_for_edge_collisions,
-                apply_velocity.before(check_for_edge_collisions),
+                handle_inter_ball_collision.before(handle_for_edge_collisions),
+                handle_for_edge_collisions,
+                apply_velocity.after(handle_for_edge_collisions),
             ),
         )
         .run();
