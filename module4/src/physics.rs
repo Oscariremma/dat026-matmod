@@ -49,6 +49,16 @@ pub fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time_step: 
     }
 }
 
+pub fn apply_gravity(
+    mut query: Query<(&mut Velocity)>,
+    gravity: Res<Gravity>,
+    time_step: Res<FixedTime>,
+) {
+    for mut velocity in &mut query {
+        velocity.y += gravity.0 * time_step.period.as_secs_f32()
+    }
+}
+
 pub fn handle_inter_ball_collision(
     mut balls_query: Query<(&Transform, &mut Velocity, &Ball)>,
     time_step: Res<FixedTime>,
