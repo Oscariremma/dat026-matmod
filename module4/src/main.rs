@@ -20,25 +20,25 @@ const BALLS_Z_INDEX: f32 = 1.0;
 fn get_initial_balls() -> Vec<StartingParameter> {
     vec![
         StartingParameter {
-            velocity: Vec2::new(200.0, -100.0),
+            velocity: Vec2::new(000.0, -500.0),
             position: Vec2::new(200.0, 100.0),
             color: Color::DARK_GREEN,
             size: 100.0,
         },
         StartingParameter {
-            velocity: Vec2::new(0.0, 100.0),
+            velocity: Vec2::new(000.0, -500.0),
             position: Vec2::new(0.0, -200.0),
             color: Color::TURQUOISE,
             size: 100.0,
         },
         StartingParameter {
-            velocity: Vec2::new(400.0, 100.0),
+            velocity: Vec2::new(0.0, -500.0),
             position: Vec2::new(-400.0, 300.0),
             color: Color::BLUE,
             size: 100.0,
         },
         StartingParameter {
-            velocity: Vec2::new(0.0, 0.0),
+            velocity: Vec2::new(0.0, -500.0),
             position: Vec2::new(-200.0, -100.0),
             color: Color::BLACK,
             size: 100.0,
@@ -64,13 +64,13 @@ fn main() {
         .add_systems(
             FixedUpdate,
             (
-                apply_gravity.before(handle_inter_ball_collision),
                 handle_inter_ball_collision.before(handle_for_edge_collisions),
                 handle_for_edge_collisions.before(apply_velocity),
+                //apply_gravity.before(apply_velocity),
                 apply_velocity,
             ),
         )
-        .insert_resource(Gravity(-1000.0))
+        .insert_resource(GravityConstant(1000.0))
         .run();
 }
 
@@ -100,6 +100,9 @@ fn setup(
             },
             Ball,
             Velocity(ball.velocity),
+            Gravity {
+                max_movable_distance: f32::INFINITY,
+            },
         ));
     }
 }
