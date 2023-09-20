@@ -1,4 +1,5 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::utils::Instant;
 use bevy::window::{PrimaryWindow, Window};
 use rand::{Rng, RngCore};
 use crate::BALLS_Z_INDEX;
@@ -11,6 +12,16 @@ pub fn handle_left_click(
     q_windows: Query<&Window, With<PrimaryWindow>>,
     camera_q: Query<(&Camera, &GlobalTransform), With<MainCamera>>
 ) {
+    // Very hacky solution to prevent double spawning
+    static mut LAST_CLICK: Option<Instant> = None;
+    unsafe {
+        if let Some(last_click) = LAST_CLICK {
+            if last_click.elapsed().as_secs_f32() < 0.1 {
+                return;
+            }
+        }
+        LAST_CLICK = Some(Instant::now());
+    }
 
     let (camera, camera_transform) = camera_q.single();
 
@@ -45,9 +56,5 @@ pub fn handle_left_click(
         Ball { mass },
         Velocity(Vec2::new(0.0, 0.0)),
     ));
-}
-
-pub fn handle_drag() {
-
 }
 

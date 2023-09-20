@@ -25,7 +25,7 @@ fn main() {
         .add_plugins(DebugLinesPlugin::default())
         .insert_resource(ClearColor(BACKGROUND_COLOR))
         // Configure how frequently our gameplay systems are run
-        .insert_resource(FixedTime::new_from_secs(1.0 / 100.0))
+        .insert_resource(FixedTime::new_from_secs(1.0 / 10000.0))
         .add_systems(Startup, setup)
         // Add our gameplay simulation systems to the fixed timestep schedule
         .add_systems(
@@ -33,7 +33,6 @@ fn main() {
             (
                 handle_left_click
                     .run_if(input_just_pressed(MouseButton::Left)),
-                handle_drag
                     .run_if(input_pressed(MouseButton::Left)),
                 handle_inter_ball_collision.before(handle_for_edge_collisions),
                 handle_for_edge_collisions.before(apply_velocity),
