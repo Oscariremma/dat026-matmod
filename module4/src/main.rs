@@ -1,15 +1,15 @@
 mod components;
-mod physics;
 mod inputs;
+mod physics;
 
-use bevy::{prelude::*};
 use bevy::core_pipeline::bloom::BloomSettings;
-use bevy::core_pipeline::tonemapping::Tonemapping;
+use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
 use bevy::input::common_conditions::*;
+use bevy::prelude::*;
 use bevy_prototype_debug_lines::*;
 use components::*;
-use physics::*;
 use inputs::*;
+use physics::*;
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.05, 0.05, 0.05);
 
@@ -33,8 +33,8 @@ fn main() {
         .add_systems(
             FixedUpdate,
             (
-                handle_left_click
-                    .run_if(input_just_pressed(MouseButton::Left)),
+                handle_left_click.run_if(input_just_pressed(MouseButton::Left)),
+                handle_right_click.run_if(input_just_pressed(MouseButton::Right)),
                 handle_inter_ball_collision.before(handle_for_edge_collisions),
                 handle_for_edge_collisions.before(apply_velocity),
                 apply_gravity.before(apply_velocity),
@@ -46,9 +46,7 @@ fn main() {
 }
 
 // Add the game's entities to our world
-fn setup(
-    mut commands: Commands,
-) {
+fn setup(mut commands: Commands) {
     // Camera
     commands.spawn((
         Camera2dBundle {
@@ -56,7 +54,9 @@ fn setup(
                 hdr: true, // 1. HDR is required for bloom
                 ..default()
             },
-            tonemapping: Tonemapping::TonyMcMapface, // 2. Using a tonemapper that desaturates to white is recommended
+            //tonemapping: Tonemapping::TonyMcMapface, // 2. Using a tonemapper that desaturates to white is recommended
+            tonemapping: Tonemapping::ReinhardLuminance,
+            deband_dither: DebandDither::Enabled,
             ..default()
         },
         MainCamera,
