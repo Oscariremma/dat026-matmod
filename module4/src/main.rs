@@ -1,48 +1,17 @@
 mod components;
 mod physics;
+mod inputs;
 
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*};
+use bevy::input::common_conditions::*;
 use bevy_prototype_debug_lines::*;
 use components::*;
 use physics::*;
-
-struct StartingParameter {
-    velocity: Vec2,
-    position: Vec2,
-    color: Color,
-    size: f32,
-    mass: f32,
-}
+use inputs::*;
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
 const BALLS_Z_INDEX: f32 = 1.0;
-
-fn get_initial_balls() -> Vec<StartingParameter> {
-    vec![
-        StartingParameter {
-            velocity: Vec2::new(500.0, -500.0),
-            position: Vec2::new(200.0, 100.0),
-            color: Color::DARK_GREEN,
-            size: 100.0,
-            mass: 1.0,
-        },
-        StartingParameter {
-            velocity: Vec2::new(200.0, -500.0),
-            position: Vec2::new(0.0, -200.0),
-            color: Color::TURQUOISE,
-            size: 150.0,
-            mass: 2.0,
-        },
-        StartingParameter {
-            velocity: Vec2::new(0.0, -500.0),
-            position: Vec2::new(-400.0, 200.0),
-            color: Color::BLUE,
-            size: 200.0,
-            mass: 5.0,
-        },
-    ]
-}
 
 fn main() {
     App::new()
@@ -56,51 +25,30 @@ fn main() {
         .add_plugins(DebugLinesPlugin::default())
         .insert_resource(ClearColor(BACKGROUND_COLOR))
         // Configure how frequently our gameplay systems are run
-        .insert_resource(FixedTime::new_from_secs(1.0 / 60.0))
+        .insert_resource(FixedTime::new_from_secs(1.0 / 100.0))
         .add_systems(Startup, setup)
         // Add our gameplay simulation systems to the fixed timestep schedule
         .add_systems(
             FixedUpdate,
             (
+                handle_left_click
+                    .run_if(input_just_pressed(MouseButton::Left)),
+                handle_drag
+                    .run_if(input_pressed(MouseButton::Left)),
                 handle_inter_ball_collision.before(handle_for_edge_collisions),
                 handle_for_edge_collisions.before(apply_velocity),
-                //apply_gravity.before(apply_velocity),
+                apply_gravity.before(apply_velocity),
                 apply_velocity,
             ),
         )
-        .insert_resource(GravityConstant(1000.0))
+        .insert_resource(Gravity(1000.0))
         .run();
 }
 
 // Add the game's entities to our world
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     // Camera
     commands.spawn((Camera2dBundle::default(), MainCamera));
-
-    let initial_balls = get_initial_balls();
-
-    for ball in initial_balls {
-        commands.spawn((
-            MaterialMesh2dBundle {
-                mesh: meshes.add(shape::Circle::default().into()).into(),
-                material: materials.add(ColorMaterial::from(ball.color)),
-                transform: Transform::from_translation(Vec3 {
-                    x: ball.position.x,
-                    y: ball.position.y,
-                    z: BALLS_Z_INDEX,
-                })
-                .with_scale(Vec3::splat(ball.size)),
-                ..default()
-            },
-            Ball { mass: ball.mass },
-            Velocity(ball.velocity),
-            Gravity {
-                max_movable_distance: f32::INFINITY,
-            },
-        ));
-    }
 }

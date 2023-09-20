@@ -5,7 +5,7 @@ use bevy::window::PrimaryWindow;
 
 pub fn handle_for_edge_collisions(
     window_query: Query<&Window, With<PrimaryWindow>>,
-    mut balls_query: Query<(&Transform, &mut Velocity, &mut Gravity, &Ball)>,
+    mut balls_query: Query<(&Transform, &mut Velocity, &Ball)>,
     time_step: Res<FixedTime>,
 ) {
     let window = window_query.get_single().expect("Window should exist.");
@@ -15,7 +15,7 @@ pub fn handle_for_edge_collisions(
     let window_top = window.height() / 2.0;
     let window_bottom = -window.height() / 2.0;
 
-    for (transform, mut velocity, mut gravity, _) in &mut balls_query {
+    for (transform, mut velocity, _) in &mut balls_query {
         let new_edge_x = next_frame_edge(
             transform.translation.x,
             velocity.x,
@@ -30,28 +30,12 @@ pub fn handle_for_edge_collisions(
             &time_step,
         );
 
-        let current_y_edge = calculate_edge(transform.translation.y, transform.scale.y);
-
         if new_edge_x > window_right || new_edge_x < window_left {
             velocity.x *= -1.0;
         }
 
-        if new_edge_y > window_top {
+        if new_edge_y > window_top || new_edge_y < window_bottom {
             velocity.y *= -1.0;
-
-            let max_movable_distance = window_top - current_y_edge;
-            if max_movable_distance < gravity.max_movable_distance {
-                gravity.max_movable_distance = max_movable_distance;
-            }
-        }
-
-        if new_edge_y < window_bottom {
-            velocity.y *= -1.0;
-
-            let max_movable_distance = current_y_edge - window_bottom;
-            if max_movable_distance < gravity.max_movable_distance {
-                gravity.max_movable_distance = max_movable_distance;
-            }
         }
     }
 }
@@ -66,35 +50,15 @@ pub fn apply_velocity(
         transform.translation.y += velocity.y * time_step.period.as_secs_f32();
         energy_sum += ball.mass * velocity.length_squared();
     }
-
-    static mut INITIAL_ENERGY: Option<f32> = None;
-    unsafe {
-        if let Some(initial_energy) = INITIAL_ENERGY {
-            if (energy_sum - initial_energy).abs() > 10.0 {
-                warn!(
-                    "ENERGY IS NOT CONSERVED! {} != {} (Initial)",
-                    energy_sum, initial_energy
-                );
-            }
-        } else {
-            INITIAL_ENERGY = Some(energy_sum);
-        }
-    }
 }
 
 pub fn apply_gravity(
-    mut query: Query<(&mut Velocity, &mut Gravity)>,
-    gravity_const: Res<GravityConstant>,
+    mut query: Query<&mut Velocity>,
+    gravity: Res<Gravity>,
     time_step: Res<FixedTime>,
 ) {
-    for (mut velocity, mut gravity) in &mut query {
-        let gravity_factor = (gravity.max_movable_distance
-            / (gravity_const.0 * time_step.period.as_secs_f32().powf(2.0)))
-        .clamp(0.0, 1.0);
-
-        velocity.y -= gravity_const.0 * time_step.period.as_secs_f32() * gravity_factor;
-
-        gravity.max_movable_distance = f32::INFINITY;
+    for mut velocity in &mut query {
+        velocity.y -= gravity.0 * time_step.period.as_secs_f32();
     }
 }
 
