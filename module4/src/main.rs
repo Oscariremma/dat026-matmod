@@ -3,13 +3,15 @@ mod physics;
 mod inputs;
 
 use bevy::{prelude::*};
+use bevy::core_pipeline::bloom::BloomSettings;
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::input::common_conditions::*;
 use bevy_prototype_debug_lines::*;
 use components::*;
 use physics::*;
 use inputs::*;
 
-const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
+const BACKGROUND_COLOR: Color = Color::rgb(0.05, 0.05, 0.05);
 
 const BALLS_Z_INDEX: f32 = 1.0;
 
@@ -33,7 +35,6 @@ fn main() {
             (
                 handle_left_click
                     .run_if(input_just_pressed(MouseButton::Left)),
-                    .run_if(input_pressed(MouseButton::Left)),
                 handle_inter_ball_collision.before(handle_for_edge_collisions),
                 handle_for_edge_collisions.before(apply_velocity),
                 apply_gravity.before(apply_velocity),
@@ -49,5 +50,16 @@ fn setup(
     mut commands: Commands,
 ) {
     // Camera
-    commands.spawn((Camera2dBundle::default(), MainCamera));
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                hdr: true, // 1. HDR is required for bloom
+                ..default()
+            },
+            tonemapping: Tonemapping::TonyMcMapface, // 2. Using a tonemapper that desaturates to white is recommended
+            ..default()
+        },
+        MainCamera,
+        BloomSettings::default(), // 3. Enable bloom for the camera
+    ));
 }

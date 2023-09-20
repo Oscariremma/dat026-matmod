@@ -37,12 +37,12 @@ pub fn handle_left_click(
     let mut rng = rand::thread_rng();
 
     let color = Color::rgb(
-        rng.next_u32() as f32 / u32::MAX as f32,
-        rng.next_u32() as f32 / u32::MAX as f32,
-        rng.next_u32() as f32 / u32::MAX as f32,
+        rng.gen_range(0.1..=1.0) * 3.0,
+        rng.gen_range(0.1..=1.0) * 3.0,
+        rng.gen_range(0.1..=1.0) * 3.0,
     );
 
-    let size = rng.gen_range(10.0..200.0);
+    let size = rng.gen_range(50.0..200.0);
     let mass = size / 10.0;
 
     commands.spawn((
