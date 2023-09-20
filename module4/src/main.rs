@@ -11,6 +11,7 @@ struct StartingParameter {
     position: Vec2,
     color: Color,
     size: f32,
+    mass: f32,
 }
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
@@ -20,28 +21,25 @@ const BALLS_Z_INDEX: f32 = 1.0;
 fn get_initial_balls() -> Vec<StartingParameter> {
     vec![
         StartingParameter {
-            velocity: Vec2::new(000.0, -500.0),
+            velocity: Vec2::new(500.0, -500.0),
             position: Vec2::new(200.0, 100.0),
             color: Color::DARK_GREEN,
             size: 100.0,
+            mass: 1.0,
         },
         StartingParameter {
-            velocity: Vec2::new(000.0, -500.0),
+            velocity: Vec2::new(200.0, -500.0),
             position: Vec2::new(0.0, -200.0),
             color: Color::TURQUOISE,
-            size: 100.0,
+            size: 150.0,
+            mass: 2.0,
         },
         StartingParameter {
             velocity: Vec2::new(0.0, -500.0),
-            position: Vec2::new(-400.0, 300.0),
+            position: Vec2::new(-400.0, 200.0),
             color: Color::BLUE,
-            size: 100.0,
-        },
-        StartingParameter {
-            velocity: Vec2::new(0.0, -500.0),
-            position: Vec2::new(-200.0, -100.0),
-            color: Color::BLACK,
-            size: 100.0,
+            size: 200.0,
+            mass: 5.0,
         },
     ]
 }
@@ -98,7 +96,7 @@ fn setup(
                 .with_scale(Vec3::splat(ball.size)),
                 ..default()
             },
-            Ball,
+            Ball { mass: ball.mass },
             Velocity(ball.velocity),
             Gravity {
                 max_movable_distance: f32::INFINITY,

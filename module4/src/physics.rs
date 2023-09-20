@@ -56,34 +56,28 @@ pub fn handle_for_edge_collisions(
     }
 }
 
-pub fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time_step: Res<FixedTime>) {
-    static mut NR_RUNS: u32 = 0;
-    static mut TOTAL_SPEED_SO_FAR: f32 = 0.0;
-    static mut PAST_AVERAGE: f32 = 0.0;
-
-    let mut speed_sum = 0.0;
-    for (mut transform, velocity) in &mut query {
+pub fn apply_velocity(
+    mut query: Query<(&mut Transform, &Velocity, &Ball)>,
+    time_step: Res<FixedTime>,
+) {
+    let mut energy_sum = 0.0;
+    for (mut transform, velocity, ball) in &mut query {
         transform.translation.x += velocity.x * time_step.period.as_secs_f32();
         transform.translation.y += velocity.y * time_step.period.as_secs_f32();
-        speed_sum += velocity.length();
+        energy_sum += ball.mass * velocity.length_squared();
     }
 
+    static mut INITIAL_ENERGY: Option<f32> = None;
     unsafe {
-        TOTAL_SPEED_SO_FAR += speed_sum;
-        NR_RUNS += 1;
-
-        if NR_RUNS > 60 * 10 {
-            let average_speed = TOTAL_SPEED_SO_FAR / NR_RUNS as f32;
-            info!("Average speed: {}", average_speed);
-
-            if PAST_AVERAGE != 0.0 && (average_speed - PAST_AVERAGE).abs() > 100.0 {
-                info!("SPEED HAS CHANGED SIGNIFICANTLY SINCE LAST AVERAGE");
-                info!("{} vs {}", average_speed, PAST_AVERAGE);
+        if let Some(initial_energy) = INITIAL_ENERGY {
+            if (energy_sum - initial_energy).abs() > 10.0 {
+                warn!(
+                    "ENERGY IS NOT CONSERVED! {} != {} (Initial)",
+                    energy_sum, initial_energy
+                );
             }
-            PAST_AVERAGE = average_speed;
-
-            NR_RUNS = 0;
-            TOTAL_SPEED_SO_FAR = 0.0;
+        } else {
+            INITIAL_ENERGY = Some(energy_sum);
         }
     }
 }
@@ -149,14 +143,25 @@ fn bounce(
     ball_a: &mut (&Transform, Mut<Velocity>, &Ball),
     ball_b: &mut (&Transform, Mut<Velocity>, &Ball),
 ) {
-    let (transform_a, velocity_a, _) = ball_a;
-    let (transform_b, velocity_b, _) = ball_b;
+    let (transform_a, velocity_a, ball_a) = ball_a;
+    let (transform_b, velocity_b, ball_b) = ball_b;
 
     let vec_between =
         (transform_b.translation.truncate() - transform_a.translation.truncate()).normalize();
 
-    velocity_a.0 = velocity_a.0.length() * -vec_between;
-    velocity_b.0 = velocity_b.0.length() * vec_between;
+    let vel_a_project = velocity_a.0.project_onto(vec_between);
+    let vel_b_project = velocity_b.0.project_onto(vec_between);
+
+    velocity_a.0 -= vel_a_project;
+    velocity_b.0 -= vel_b_project;
+
+    let new_speed_a_project =
+        calculate_speed_after_collision(ball_a.mass, ball_b.mass, vel_a_project, vel_b_project);
+    let new_speed_b_project =
+        calculate_speed_after_collision(ball_b.mass, ball_a.mass, vel_b_project, vel_a_project);
+
+    velocity_a.0 += new_speed_a_project;
+    velocity_b.0 += new_speed_b_project;
 }
 
 fn next_frame_edge(center: f32, velocity: f32, diameter: f32, time_step: &Res<FixedTime>) -> f32 {
@@ -175,4 +180,8 @@ fn calculate_edge(center: f32, diameter: f32) -> f32 {
 
 fn next_frame_coords(cords: &Vec2, velocity: &Vec2, time_step: &Res<FixedTime>) -> Vec2 {
     (*cords) + ((*velocity) * time_step.period.as_secs_f32())
+}
+
+fn calculate_speed_after_collision(m_a: f32, m_b: f32, u_a: Vec2, u_b: Vec2) -> Vec2 {
+    (m_a - m_b) / (m_a + m_b) * u_a + (2.0 * m_b) / (m_a + m_b) * u_b
 }
