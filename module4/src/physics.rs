@@ -44,11 +44,9 @@ pub fn apply_velocity(
     mut query: Query<(&mut Transform, &Velocity, &Ball)>,
     time_step: Res<FixedTime>,
 ) {
-    let mut energy_sum = 0.0;
     for (mut transform, velocity, ball) in &mut query {
         transform.translation.x += velocity.x * time_step.period.as_secs_f32();
         transform.translation.y += velocity.y * time_step.period.as_secs_f32();
-        energy_sum += ball.mass * velocity.length_squared();
     }
 }
 
