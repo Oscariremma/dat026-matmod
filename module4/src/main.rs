@@ -35,12 +35,17 @@ fn main() {
         .add_systems(
             FixedUpdate,
             (
-                handle_left_click.run_if(input_just_pressed(MouseButton::Left)),
-                handle_right_click.run_if(input_just_pressed(MouseButton::Right)),
                 handle_inter_ball_collision.before(handle_for_edge_collisions),
                 handle_for_edge_collisions.before(apply_velocity),
                 apply_gravity.before(apply_velocity),
                 apply_velocity,
+            ),
+        )
+        .add_systems(
+            Update,
+            (
+                handle_left_click.run_if(input_just_pressed(MouseButton::Left)),
+                handle_right_click.run_if(input_just_pressed(MouseButton::Right)),
             ),
         )
         .insert_resource(Gravity(1000.0))
