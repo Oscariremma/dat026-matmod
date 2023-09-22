@@ -36,7 +36,7 @@ fn main() {
             FixedUpdate,
             (
                 handle_inter_ball_collision.before(handle_for_edge_collisions),
-                handle_for_edge_collisions.before(apply_velocity),
+                handle_for_edge_collisions.before(apply_gravity),
                 apply_gravity.before(apply_velocity),
                 apply_velocity,
             ),
