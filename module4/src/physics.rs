@@ -46,11 +46,13 @@ pub fn handle_for_edge_collisions(
         let current_edge_y = calculate_edge(transform.translation.y, transform.scale.y);
 
         if current_edge_x > window_right || current_edge_x < window_left {
-            transform.translation.x -= transform.translation.x.signum();
+            transform.translation.x = window_right.copysign(transform.translation.x)
+                + (transform.scale.x / 2.0).copysign(-transform.translation.x);
         }
 
         if current_edge_y > window_top || current_edge_y < window_bottom {
-            transform.translation.y -= transform.translation.y.signum();
+            transform.translation.y = window_top.copysign(transform.translation.y)
+                + (transform.scale.y / 2.0).copysign(-transform.translation.y);
         }
     }
 }
