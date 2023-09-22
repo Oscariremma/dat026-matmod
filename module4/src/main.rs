@@ -22,6 +22,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Balls".to_string(),
+                fit_canvas_to_parent: true,
                 ..Default::default()
             }),
             ..Default::default()
