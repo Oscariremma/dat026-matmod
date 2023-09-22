@@ -42,7 +42,7 @@ fn main() {
             ),
         )
         .add_systems(
-            Update,
+            PreUpdate,
             (
                 handle_left_click.run_if(input_just_pressed(MouseButton::Left)),
                 handle_right_click.run_if(input_just_pressed(MouseButton::Right)),
