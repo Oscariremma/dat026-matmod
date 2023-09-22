@@ -5,6 +5,7 @@ use bevy::utils::Instant;
 use bevy::window::{PrimaryWindow, Window};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::Rng;
+use std::f32::consts::PI;
 use std::ops::Mul;
 
 macro_rules! debounce_return {
@@ -69,7 +70,7 @@ pub fn handle_left_click(
         .as_rgba()
         .mul(3.0);
 
-    let mass = size / 10.0;
+    let mass = PI * (size / 2.0).powi(2);
 
     commands.spawn((
         MaterialMesh2dBundle {
