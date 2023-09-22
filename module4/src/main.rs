@@ -52,21 +52,19 @@ fn main() {
         .run();
 }
 
-// Add the game's entities to our world
 fn setup(mut commands: Commands) {
     // Camera
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
-                hdr: true, // 1. HDR is required for bloom
+                hdr: true,
                 ..default()
             },
-            //tonemapping: Tonemapping::TonyMcMapface, // 2. Using a tonemapper that desaturates to white is recommended
             tonemapping: Tonemapping::ReinhardLuminance,
             deband_dither: DebandDither::Enabled,
             ..default()
         },
         MainCamera,
-        BloomSettings::default(), // 3. Enable bloom for the camera
+        BloomSettings::default(),
     ));
 }
